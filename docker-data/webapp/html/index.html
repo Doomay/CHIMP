@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Socket IO Camera Snapshots</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+
+	<link rel="stylesheet" href="static/css/main.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="static/js/main.js" defer></script>
+</head>
+<body onload="init()">
+    <div class="container">
+		<div class="header">
+			<image class="header-logo" src="/static/images/Logo-ZUYD-Data-Intelligence.svg"></image>
+			<span title="Original credit to Dwayne Debets, Roald Janssen, Bryan Kroon and Gavin Melis for creating emotion recognition model and the frontend upon which CHIMP is build to demonstrate its functionalities.">
+				Emotion Detection using CHIMP
+			</span>
+		</div>
+		<div class="banner"></div>
+		<div class="camera">
+			<div class="title">Camera Feed</div>
+			<hr />
+			<div class="video-container">
+				<div class="canvas-border">
+					<canvas id="preview" width="640" height="480"></canvas>
+				</div>
+			</div>
+		</div>
+		<div class="info">
+			<div class="title">Predictions</div>
+			<hr class="info-divider" />
+			<div class="data-container">
+				<table class="data-table">
+					<tr>
+						<td class="data-index">Angry:</td>
+						<td id="data_angry">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Disgust:</td>
+						<td id="data_disgust">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Fear:</td>
+						<td id="data_fear">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Happy</td>
+						<td id="data_happy">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Neutral:</td>
+						<td id="data_neutral">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Sad:</td>
+						<td id="data_sad">100%</td>
+					</tr>
+					<tr>
+						<td class="data-index">Surprised:</td>
+						<td id="data_surprise">100%</td>
+					</tr>
+				</table>
+			</div>
+			<div class="model-update">
+				<br />
+				<div class="button-container">
+				<button id="btn_model_update" class="model-snapshot-button" onclick="uploadDataset()">Load in Dataset</button>
+				<input id="input_dataset_upload" class="model-update-input" type="file" name="zipfile" accept="application/zip" />
+				</div>
+				<br />
+				<div class="button-container">
+				<button id="btn_model_update" class="model-snapshot-button" onclick="downloadDataset()">Download Dataset</button>
+				</div>
+				<br />
+				<div class="button-container">
+				<button id="btn_model_update" class="model-snapshot-button" onclick="takeSnapshot()">Take Snapshot</button>
+				<button id="btn_model_resume" class="model-snapshot-delete" onclick="resume()">
+					<i class="fas fa-solid fa-x"></i>
+				</button>
+				</div>
+				<br />
+				<div class="button-container">
+				<button id="btn_snapshot_upload" class="model-snapshot-upload">Upload Snapshot</button>
+				<button id="btn_model_resume" class="model-snapshot-delete" onclick="uploadSnapshot()">
+					<i class="fas fa-solid fa-forward"></i>
+				</button>
+				</div>
+			</div>	
+					<div class="select-btn">
+						<span class="btn-text">Select Correct Emotion</span>
+						<span class="arrow-dwn">
+							<i class="fa-solid fa-chevron-down"></i>
+						</span>
+					</div>
+					<ul class="list-items">
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Angry</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Disgust</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Fear</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Happy</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Neutral</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Sad</span>
+						</li>
+						<li class="item">
+							<span class="checkbox">
+								<i class="fa-solid fa-check check-icon"></i>
+							</span>
+							<span class="item-text">Surprise</span>
+						</li>
+					</ul>
+					<br />
+					<div class="model-update">
+					<button id="btn_snapshot_train" class="model-snapshot-train" onclick="runPipeline()">Full Pipeline</button>
+					<input id="input_dataset_train" class="model-update-input" type="file" name="zipfile" accept="application/zip" />
+					</div>
+					<br />	
+					<div class="model-update">
+					<label for="userIdInput">Enter User ID:</label>
+					<input type="text" id="userIdInput" placeholder="Enter User ID">
+					<button onclick="changeUserId()">Change User ID</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="footer">
+			<!-- Original credit to Dwayne Debets, Roald Janssen, Bryan Kroon and Gavin Melis for creating emotion
+			 		recognition model and the frontend upon which CHIMP is build to demonstrate its functionalities. -->
+			<div class="footer-by">By Bryan Kroon</div>
+			<div class="footer-owner">Lectoraat Data Intellligence Zuyd™</div>
+		</div>
+    </div>
+</body>
+</html>
